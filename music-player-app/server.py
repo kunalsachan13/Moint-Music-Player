@@ -6,15 +6,13 @@ import os
 import json
 import uuid
 import time
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, send_file
 from flask_cors import CORS
-from ytmusicapi import YTMusic
-from werkzeug.utils import secure_filename
+from spotapi import Song, Public
 
+BASE_DIR = '/tmp' if os.environ.get('VERCEL') else os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__)
 CORS(app)
-
-BASE_DIR = '/tmp' if os.environ.get('VERCEL') else os.path.dirname(__file__)
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -39,59 +37,198 @@ def save_json(path, data):
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
-# Initialize YTMusic
-auth_file = 'oauth.json' if os.path.exists('oauth.json') else ('browser.json' if os.path.exists('browser.json') else None)
+# Initialize Unofficial Spotify API Client (Aran404/SpotAPI)
 try:
-    if auth_file:
-        yt = YTMusic(auth_file)
-        print(f"[*] YTMusic initialized with authentication ({auth_file})")
-    else:
-        yt = YTMusic()
-        print("[*] YTMusic initialized in unauthenticated mode")
+    spot_song = Song()
+    spot_public = Public()
+    print("[*] SpotAPI (Aran404/SpotAPI) initialized successfully!")
 except Exception as e:
-    yt = YTMusic()
-    print(f"[!] YTMusic fallback unauthenticated mode: {e}")
+    spot_song = None
+    spot_public = None
+    print(f"[!] SpotAPI initialization warning: {e}")
 
 
-# --- YTMusic Endpoints ---
+# --- Spotify API Endpoints ---
 @app.route('/api/search', methods=['GET'])
-def search():
+@app.route('/api/spotify/search', methods=['GET'])
+def spotify_search():
     query = request.args.get('q', '').strip()
+    limit = int(request.args.get('limit', 20))
     if not query:
         return jsonify([])
 
-    try:
-        results = yt.search(query, filter='songs')
-        tracks = []
-        for item in results:
-            video_id = item.get('videoId')
-            if not video_id:
-                continue
+    tracks = []
 
-            thumbs = item.get('thumbnails', [])
-            art = thumbs[-1]['url'] if thumbs else f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
-            if 'w60-h60' in art:
-                art = art.replace('w60-h60', 'w500-h500').replace('w120-h120', 'w500-h500')
+    # 1. Try SpotAPI Song().query_songs()
+    if spot_song:
+        try:
+            res = spot_song.query_songs(query, limit=limit)
+            items = res.get('data', {}).get('searchV2', {}).get('tracksV2', {}).get('items', [])
+            for item in items:
+                data = item.get('item', {}).get('data', {})
+                if not data or data.get('__typename') != 'Track':
+                    continue
 
-            artists_list = item.get('artists', [])
-            artist_name = ", ".join([a.get('name', '') for a in artists_list if a.get('name')]) if isinstance(artists_list, list) else "YouTube Music"
+                track_id = data.get('id')
+                title = data.get('name', 'Unknown Track')
+                artist_items = data.get('artists', {}).get('items', [])
+                artist_names = [a.get('profile', {}).get('name') for a in artist_items if a.get('profile', {}).get('name')]
+                artist_name = ", ".join(artist_names) if artist_names else "Spotify Artist"
+                album_data = data.get('albumOfTrack', {})
+                album_name = album_data.get('name', 'Spotify Track')
+                cover_sources = album_data.get('coverArt', {}).get('sources', [])
+                art = cover_sources[0]['url'] if cover_sources else ''
+                duration_ms = data.get('duration', {}).get('totalMilliseconds', 0)
+                duration_sec = int(duration_ms / 1000) if duration_ms else 210
 
-            tracks.append({
-                'id': f'yt-{video_id}',
-                'ytId': video_id,
-                'title': item.get('title', 'Unknown Title'),
-                'artist': artist_name or 'YouTube Music',
-                'album': item.get('album', {}).get('name', 'YouTube Music') if isinstance(item.get('album'), dict) else 'YouTube Music',
+                tracks.append({
+                    'id': f'spotify-{track_id}',
+                    'spotifyId': track_id,
+                    'title': title,
+                    'artist': artist_name,
+                    'album': album_name,
+                    'art': art,
+                    'duration': duration_sec,
+                    'isSpotify': True,
+                    'needsResolve': True,
+                    'badge': 'Spotify'
+                })
+        except Exception as e:
+            print(f"[!] SpotAPI query_songs notice: {e}")
+
+    # 2. Fallback to spotapi Public().song_search() if empty
+    if not tracks and spot_public:
+        try:
+            gen = spot_public.song_search(query)
+            batch = next(gen, [])
+            for wrapper in batch:
+                data = wrapper.get('item', {}).get('data', {})
+                if not data or data.get('__typename') != 'Track':
+                    continue
+
+                track_id = data.get('id')
+                title = data.get('name', 'Unknown Track')
+                artist_items = data.get('artists', {}).get('items', [])
+                artist_names = [a.get('profile', {}).get('name') for a in artist_items if a.get('profile', {}).get('name')]
+                artist_name = ", ".join(artist_names) if artist_names else "Spotify Artist"
+                album_data = data.get('albumOfTrack', {})
+                album_name = album_data.get('name', 'Spotify Track')
+                cover_sources = album_data.get('coverArt', {}).get('sources', [])
+                art = cover_sources[0]['url'] if cover_sources else ''
+                duration_ms = data.get('duration', {}).get('totalMilliseconds', 0)
+                duration_sec = int(duration_ms / 1000) if duration_ms else 210
+
+                tracks.append({
+                    'id': f'spotify-{track_id}',
+                    'spotifyId': track_id,
+                    'title': title,
+                    'artist': artist_name,
+                    'album': album_name,
+                    'art': art,
+                    'duration': duration_sec,
+                    'isSpotify': True,
+                    'needsResolve': True,
+                    'badge': 'Spotify'
+                })
+        except Exception as e:
+            print(f"[!] SpotAPI public search error: {e}")
+
+    return jsonify(tracks)
+
+
+# Global in-memory cache for Spotify public playlists
+_spotify_playlists_cache = {
+    'data': [],
+    'timestamp': 0
+}
+
+
+@app.route('/api/spotify/playlists', methods=['GET'])
+def get_spotify_playlists():
+    global _spotify_playlists_cache
+    now = time.time()
+    # Cache for 15 minutes
+    if _spotify_playlists_cache['data'] and (now - _spotify_playlists_cache['timestamp'] < 900):
+        return jsonify(_spotify_playlists_cache['data'])
+
+    spotify_playlist_configs = [
+        {'id': '37i9dQZF1DXcBWIGoYBM5M', 'badge': 'TOP HITS', 'fallback_title': "Today's Top Hits 🌟"},
+        {'id': '37i9dQZF1DWWQRwaw0UeBw', 'badge': 'LOFI', 'fallback_title': "Lofi Beats ☕"},
+        {'id': '37i9dQZF1DX0XUfTFmBDM0', 'badge': 'BOLLYWOOD', 'fallback_title': "Hot Hits Hindi 🎬"},
+        {'id': '37i9dQZF1DXdLENycTe12M', 'badge': 'SYNTH', 'fallback_title': "Retro Synthwave ⚡"},
+        {'id': '37i9dQZF1DX76Wlfdnj7AP', 'badge': 'WORKOUT', 'fallback_title': "Beast Mode Workout 🏋️‍♂️"},
+        {'id': '37i9dQZF1DX4E3UdUs7fUx', 'badge': 'ACOUSTIC', 'fallback_title': "Acoustic Favorites 🎸"}
+    ]
+
+    result_playlists = []
+    from spotapi import PublicPlaylist
+
+    for config in spotify_playlist_configs:
+        pid = config['id']
+        try:
+            pl = PublicPlaylist(pid)
+            info = pl.get_playlist_info()
+            pdata = info.get('data', {}).get('playlistV2', {})
+            title = pdata.get('name') or config['fallback_title']
+            desc = pdata.get('description') or ''
+
+            # Image
+            images = pdata.get('images', {}).get('items', [])
+            art = images[0]['sources'][0]['url'] if images and images[0].get('sources') else ''
+
+            # Tracks
+            contents = pdata.get('content', {}).get('items', [])
+            tracks = []
+            for track_item in contents:
+                data = track_item.get('itemV2', {}).get('data', {}) or track_item.get('item', {}).get('data', {})
+                if not data or data.get('__typename') != 'Track':
+                    continue
+
+                track_id = data.get('id') or (data.get('uri', '').split(':')[-1] if data.get('uri') else None)
+                if not track_id:
+                    continue
+
+                name = data.get('name', 'Spotify Song')
+                artist_items = data.get('artists', {}).get('items', [])
+                artist_names = [a.get('profile', {}).get('name') for a in artist_items if a.get('profile', {}).get('name')]
+                artist_name = ", ".join(artist_names) if artist_names else "Spotify Artist"
+                album_data = data.get('albumOfTrack', {})
+                album_name = album_data.get('name', 'Spotify Album')
+                cover_sources = album_data.get('coverArt', {}).get('sources', [])
+                cover_art = cover_sources[0]['url'] if cover_sources else art
+                duration_ms = data.get('trackDuration', {}).get('totalMilliseconds', 0) or data.get('duration', {}).get('totalMilliseconds', 0)
+                duration_sec = int(duration_ms / 1000) if duration_ms else 210
+
+                tracks.append({
+                    'id': f'spotify-{track_id}',
+                    'spotifyId': track_id,
+                    'title': name,
+                    'artist': artist_name,
+                    'album': album_name,
+                    'art': cover_art,
+                    'duration': duration_sec,
+                    'isSpotify': True,
+                    'needsResolve': True,
+                    'badge': 'Spotify'
+                })
+
+            result_playlists.append({
+                'id': f'spotify-pl-{pid}',
+                'spotifyPlaylistId': pid,
+                'title': title,
+                'sub': f'{len(tracks)} Tracks • {desc[:60]}...' if desc else f'{len(tracks)} Tracks on Spotify',
+                'badge': config['badge'],
                 'art': art,
-                'duration': item.get('duration_seconds') or 210,
-                'isYt': True,
-                'badge': 'YT Music'
+                'tracks': tracks
             })
+        except Exception as e:
+            print(f"[!] Error fetching Spotify playlist {pid}: {e}")
 
-        return jsonify(tracks)
-    except Exception as e:
-        print(f"[!] Search error: {e}")
-        return jsonify({'error': str(e)}), 500
+    if result_playlists:
+        _spotify_playlists_cache['data'] = result_playlists
+        _spotify_playlists_cache['timestamp'] = now
+
+    return jsonify(result_playlists)
 
 
 # --- Authentication & User Profile Endpoints ---
@@ -241,6 +378,20 @@ def upload_community_song():
 def get_community_songs():
     community_songs = load_json(COMMUNITY_FILE, [])
     return jsonify(community_songs)
+
+
+@app.route('/')
+@app.route('/index.html')
+def index():
+    return send_file(os.path.join(BASE_DIR, 'index.html'))
+
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    file_path = os.path.join(BASE_DIR, filename)
+    if os.path.isfile(file_path):
+        return send_file(file_path)
+    return jsonify({'error': 'File not found'}), 404
 
 
 if __name__ == '__main__':

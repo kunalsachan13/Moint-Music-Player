@@ -1,4 +1,8 @@
 flask
 flask-cors
-ytmusicapi
+spotapi
+pymongo
+redis
+websockets
+curl_cffi
 requests

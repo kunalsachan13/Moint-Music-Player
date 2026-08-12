@@ -21,6 +21,380 @@ document.addEventListener('DOMContentLoaded', () => {
   let isLiked = false;
   let searchMode = 'queue'; // 'queue', 'yt', 'favorites', 'community'
   let ytSearchResults = [];
+  let selectedSuggestedPlaylist = null;
+
+  // --- Curated Suggested Playlists for Online Songs Tab ---
+  const SUGGESTED_PLAYLISTS = [
+    {
+      id: 'pl-trending',
+      title: 'Global Top 50 Hits 🌟',
+      sub: '5 Tracks • Trending Pop & Hits',
+      badge: 'POP HITS',
+      art: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80',
+      tracks: [
+        {
+          id: 'sugg-starboy',
+          title: 'Starboy',
+          artist: 'The Weeknd ft. Daft Punk',
+          album: 'Starboy',
+          art: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80',
+          ytId: '34Na4j8AVgA',
+          isSpotify: true,
+          badge: 'Trending',
+          duration: 230
+        },
+        {
+          id: 'sugg-blinding',
+          title: 'Blinding Lights',
+          artist: 'The Weeknd',
+          album: 'After Hours',
+          art: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&auto=format&fit=crop&q=80',
+          ytId: '4NRXx6U8ABQ',
+          isSpotify: true,
+          badge: 'Trending',
+          duration: 200
+        },
+        {
+          id: 'sugg-levitating',
+          title: 'Levitating',
+          artist: 'Dua Lipa',
+          album: 'Future Nostalgia',
+          art: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&auto=format&fit=crop&q=80',
+          ytId: 'TUVcZfQe-Kw',
+          isSpotify: true,
+          badge: 'Trending',
+          duration: 203
+        },
+        {
+          id: 'sugg-asitwas',
+          title: 'As It Was',
+          artist: 'Harry Styles',
+          album: "Harry's House",
+          art: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80',
+          ytId: 'H5v3kku4y6Q',
+          isSpotify: true,
+          badge: 'Trending',
+          duration: 167
+        },
+        {
+          id: 'sugg-stay',
+          title: 'STAY',
+          artist: 'The Kid LAROI & Justin Bieber',
+          album: 'F*CK LOVE 3',
+          art: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=500&auto=format&fit=crop&q=80',
+          ytId: 'kTJczUoc26U',
+          isSpotify: true,
+          badge: 'Trending',
+          duration: 141
+        }
+      ]
+    },
+    {
+      id: 'pl-lofi',
+      title: 'Lofi & Chill Study Beats ☕',
+      sub: '4 Tracks • Relaxing Lofi & Ambient',
+      badge: 'CHILL',
+      art: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&auto=format&fit=crop&q=80',
+      tracks: [
+        {
+          id: 'sugg-lofi-1',
+          title: 'Lofi Study Chill Session',
+          artist: 'Lofi Girl / Chillhop',
+          album: 'Lofi Beats 2026',
+          art: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&auto=format&fit=crop&q=80',
+          ytId: 'jfKfPfyJRdk',
+          isSpotify: true,
+          badge: 'Lofi',
+          duration: 180
+        },
+        {
+          id: 'sugg-lofi-2',
+          title: 'Midnight Coffee & Rain',
+          artist: 'Sleepyhead Lofi',
+          album: 'Night Owls',
+          art: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=500&auto=format&fit=crop&q=80',
+          ytId: '5qap5aO4i9A',
+          isSpotify: true,
+          badge: 'Lofi',
+          duration: 210
+        },
+        {
+          id: 'sugg-lofi-3',
+          title: 'Suburban Sunset Vibes',
+          artist: 'Vintage Retrospect',
+          album: 'Golden Hour Lofi',
+          art: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=500&auto=format&fit=crop&q=80',
+          ytId: 'DWcjZAZBaT0',
+          isSpotify: true,
+          badge: 'Lofi',
+          duration: 195
+        },
+        {
+          id: 'sugg-lofi-4',
+          title: 'Cozy Afternoon Rain',
+          artist: 'Acoustic Lofi Collective',
+          album: 'Peaceful Mind',
+          art: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=500&auto=format&fit=crop&q=80',
+          ytId: 'lTRiuFIWV54',
+          isSpotify: true,
+          badge: 'Lofi',
+          duration: 160
+        }
+      ]
+    },
+    {
+      id: 'pl-bollywood',
+      title: 'Bollywood Mega Hits 🎬',
+      sub: '4 Tracks • Top Hindi Soundtracks',
+      badge: 'INDIAN',
+      art: 'https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=500&auto=format&fit=crop&q=80',
+      tracks: [
+        {
+          id: 'sugg-kesariya',
+          title: 'Kesariya',
+          artist: 'Arijit Singh & Pritam',
+          album: 'Brahmastra',
+          art: 'https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=500&auto=format&fit=crop&q=80',
+          ytId: 'BddP6PYo2gs',
+          isSpotify: true,
+          badge: 'Bollywood',
+          duration: 268
+        },
+        {
+          id: 'sugg-tumhiho',
+          title: 'Tum Hi Ho',
+          artist: 'Arijit Singh & Mithoon',
+          album: 'Aashiqui 2',
+          art: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=500&auto=format&fit=crop&q=80',
+          ytId: 'IJq0yyWug1k',
+          isSpotify: true,
+          badge: 'Bollywood',
+          duration: 262
+        },
+        {
+          id: 'sugg-chaleya',
+          title: 'Chaleya',
+          artist: 'Arijit Singh & Shilpa Rao',
+          album: 'Jawan',
+          art: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=500&auto=format&fit=crop&q=80',
+          ytId: 'VAdGW7QDJiU',
+          isSpotify: true,
+          badge: 'Bollywood',
+          duration: 200
+        },
+        {
+          id: 'sugg-jhoom',
+          title: 'Jhoom (R&B Remix)',
+          artist: 'Ali Zafar',
+          album: 'Jhoom Album',
+          art: 'https://images.unsplash.com/photo-1511735111819-9a3f7709049c?w=500&auto=format&fit=crop&q=80',
+          ytId: '1mQp1xQk5eE',
+          isSpotify: true,
+          badge: 'Bollywood',
+          duration: 240
+        }
+      ]
+    },
+    {
+      id: 'pl-synthwave',
+      title: 'Retro 80s & Synthwave ⚡',
+      sub: '4 Tracks • Cyberpunk & Retrowave',
+      badge: 'SYNTH',
+      art: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=500&auto=format&fit=crop&q=80',
+      tracks: [
+        {
+          id: 'sugg-synth-1',
+          title: 'Midnight City',
+          artist: 'M83',
+          album: 'Hurry Up, We\'re Dreaming',
+          art: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=500&auto=format&fit=crop&q=80',
+          ytId: 'dX3k_QDnzHE',
+          isSpotify: true,
+          badge: 'Synthwave',
+          duration: 243
+        },
+        {
+          id: 'sugg-synth-2',
+          title: 'Resonance',
+          artist: 'HOME',
+          album: 'Odyssey',
+          art: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=500&auto=format&fit=crop&q=80',
+          ytId: '8GW6sLrK40k',
+          isSpotify: true,
+          badge: 'Synthwave',
+          duration: 212
+        },
+        {
+          id: 'sugg-synth-3',
+          title: 'Cyberpunk Neon Drive 1984',
+          artist: 'Retrowave Collective',
+          album: 'Grid Runner',
+          art: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=500&auto=format&fit=crop&q=80',
+          ytId: '4xDzrJKXOOY',
+          isSpotify: true,
+          badge: 'Synthwave',
+          duration: 220
+        },
+        {
+          id: 'sugg-synth-4',
+          title: 'Turbo Killer',
+          artist: 'Carpenter Brut',
+          album: 'Trilogy',
+          art: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=500&auto=format&fit=crop&q=80',
+          ytId: 'er416Ti3RTo',
+          isSpotify: true,
+          badge: 'Synthwave',
+          duration: 208
+        }
+      ]
+    },
+    {
+      id: 'pl-workout',
+      title: 'Workout Power Energy 🏋️‍♂️',
+      sub: '4 Tracks • High-BPM Gym & EDM',
+      badge: 'WORKOUT',
+      art: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500&auto=format&fit=crop&q=80',
+      tracks: [
+        {
+          id: 'sugg-work-1',
+          title: 'Titanium',
+          artist: 'David Guetta ft. Sia',
+          album: 'Nothing But the Beat',
+          art: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500&auto=format&fit=crop&q=80',
+          ytId: 'JRfuAukYTKg',
+          isSpotify: true,
+          badge: 'EDM',
+          duration: 245
+        },
+        {
+          id: 'sugg-work-2',
+          title: 'Animals',
+          artist: 'Martin Garrix',
+          album: 'Gold Skies EP',
+          art: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&auto=format&fit=crop&q=80',
+          ytId: 'gCYcHz2t5Ls',
+          isSpotify: true,
+          badge: 'EDM',
+          duration: 184
+        },
+        {
+          id: 'sugg-work-3',
+          title: 'Levels',
+          artist: 'Avicii',
+          album: 'Levels Single',
+          art: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=500&auto=format&fit=crop&q=80',
+          ytId: '_ovdm2yX4MA',
+          isSpotify: true,
+          badge: 'EDM',
+          duration: 198
+        },
+        {
+          id: 'sugg-work-4',
+          title: 'Don\'t You Worry Child',
+          artist: 'Swedish House Mafia',
+          album: 'Until Now',
+          art: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80',
+          ytId: '1y6smkh6c-0',
+          isSpotify: true,
+          badge: 'EDM',
+          duration: 212
+        }
+      ]
+    },
+    {
+      id: 'pl-acoustic',
+      title: 'Acoustic Sessions 🎸',
+      sub: '4 Tracks • Soulful & Unplugged',
+      badge: 'INDIE',
+      art: 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=500&auto=format&fit=crop&q=80',
+      tracks: [
+        {
+          id: 'sugg-ac-1',
+          title: 'Golden Hour (Acoustic)',
+          artist: 'JVKE',
+          album: 'this is what ____ feels like',
+          art: 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=500&auto=format&fit=crop&q=80',
+          ytId: 'PEM0Vs8jf1w',
+          isSpotify: true,
+          badge: 'Acoustic',
+          duration: 210
+        },
+        {
+          id: 'sugg-ac-2',
+          title: 'Riptide',
+          artist: 'Vance Joy',
+          album: 'Dream Your Life Away',
+          art: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=500&auto=format&fit=crop&q=80',
+          ytId: 'uJ_1HMAGb4k',
+          isSpotify: true,
+          badge: 'Acoustic',
+          duration: 204
+        },
+        {
+          id: 'sugg-ac-3',
+          title: 'Counting Stars (Unplugged)',
+          artist: 'OneRepublic',
+          album: 'Native',
+          art: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80',
+          ytId: 'hT_nvWreIhg',
+          isSpotify: true,
+          badge: 'Acoustic',
+          duration: 257
+        },
+        {
+          id: 'sugg-ac-4',
+          title: 'I\'m Yours',
+          artist: 'Jason Mraz',
+          album: 'We Sing. We Dance. We Steal Things.',
+          art: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=500&auto=format&fit=crop&q=80',
+          ytId: 'EkHTsc9PU2A',
+          isSpotify: true,
+          badge: 'Acoustic',
+          duration: 242
+        }
+      ]
+    }
+  ];
+
+  // --- Queue State Persistence ---
+  function saveQueueState() {
+    try {
+      const saveableQueue = playlist.map(track => {
+        const copy = { ...track };
+        if (copy.isLocal && copy.url && copy.url.startsWith('blob:')) {
+          delete copy.url; // Blob URLs do not survive browser reloads
+        }
+        return copy;
+      });
+      localStorage.setItem('moint_queue', JSON.stringify(saveableQueue));
+      localStorage.setItem('moint_queue_index', currentIndex.toString());
+    } catch (e) {
+      console.warn('Could not save queue to localStorage:', e);
+    }
+  }
+
+  function loadQueueState() {
+    try {
+      const savedQueue = localStorage.getItem('moint_queue');
+      const savedIndex = localStorage.getItem('moint_queue_index');
+      if (savedQueue) {
+        const parsed = JSON.parse(savedQueue);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          playlist.length = 0;
+          parsed.forEach(track => playlist.push(track));
+          let idx = parseInt(savedIndex, 10);
+          if (isNaN(idx) || idx < 0) idx = 0;
+          if (idx >= playlist.length) idx = playlist.length - 1;
+          currentIndex = idx;
+          loadTrack(currentIndex, false);
+          return true;
+        }
+      }
+    } catch (e) {
+      console.warn('Could not load queue from localStorage:', e);
+    }
+    return false;
+  }
 
   // --- Dynamic API Base URL for Local & Vercel Production Deployment ---
   const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
@@ -229,7 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     track.audioUrl = directTrack.audioUrl;
                     track.art = track.art || directTrack.art;
                     track.isYt = false;
-                    track.badge = 'JioSaavn';
+                    track.badge = 'Spotify';
                     loadTrack(currentIndex, true);
                     showToast(`Playing direct stream for "${track.title}"! 🎉`);
                     return;
@@ -316,20 +690,9 @@ document.addEventListener('DOMContentLoaded', () => {
     eqTrebleVal.textContent = `${treble > 0 ? '+' : ''}${treble}dB`;
   }
 
-  // --- Synth Fallback Tone ---
+  // --- Synth Fallback Tone (Disabled to prevent beeping) ---
   function startSynthFallback(freq) {
-    if (!audioCtx) return;
     stopSynthFallback();
-    synthGainNode = audioCtx.createGain();
-    synthGainNode.gain.value = isMuted ? 0 : volume * 0.12;
-
-    synthOsc = audioCtx.createOscillator();
-    synthOsc.type = 'sawtooth';
-    synthOsc.frequency.setValueAtTime(freq || 329.63, audioCtx.currentTime);
-
-    synthOsc.connect(synthGainNode);
-    synthGainNode.connect(audioCtx.destination);
-    synthOsc.start();
   }
 
   function stopSynthFallback() {
@@ -520,6 +883,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (index < 0) index = 0;
     if (index >= playlist.length) index = playlist.length - 1;
     currentIndex = index;
+    saveQueueState();
     const track = playlist[currentIndex];
 
     // Reset current audio engines
@@ -533,8 +897,8 @@ document.addEventListener('DOMContentLoaded', () => {
     albumArt.src = track.art || generateMinimalAlbumArt(track.title, track.artist);
     trackTitle.textContent = track.title;
     trackArtist.textContent = track.artist;
-    trackAlbum.textContent = track.album || (track.badge || (track.isYt ? 'YouTube Music' : (track.isLocal ? 'Local Music' : 'Online Stream')));
-    nowPlayingTag.textContent = track.badge ? track.badge.toUpperCase() : (track.isYt ? 'YT MUSIC' : (track.isLocal ? 'LOCAL FILE' : 'ONLINE MUSIC'));
+    trackAlbum.textContent = track.album || (track.badge || (track.isSpotify ? 'Spotify Music' : (track.isLocal ? 'Local Music' : 'Spotify Stream')));
+    nowPlayingTag.textContent = track.badge ? track.badge.toUpperCase() : (track.isSpotify ? 'SPOTIFY' : (track.isLocal ? 'LOCAL FILE' : 'SPOTIFY'));
 
     if (track.audioUrl) {
       // Direct high-definition audio stream (JioSaavn / Audius / MP3 / AAC)
@@ -616,8 +980,28 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }, 800);
       }
+    } else if (track.needsResolve || track.isSpotify) {
+      showToast(`Loading Spotify stream for "${track.title}"... 🎵`);
+      resolveSpotifyTrackStream(track).then(resolved => {
+        if (resolved) {
+          if (track.audioUrl) {
+            audioPlayer.crossOrigin = 'anonymous';
+            audioPlayer.src = track.audioUrl;
+            audioPlayer.load();
+            audioPlayer.volume = volume;
+            if (isPlaying) audioPlayer.play().catch(e => {});
+          } else if (track.isYt && track.ytId && ytPlayer && ytPlayer.loadVideoById) {
+            ytPlayer.loadVideoById(track.ytId);
+          }
+          renderPlaylist();
+        } else {
+          showToast(`Could not resolve stream for "${track.title}". Skipping to next track...`);
+          setTimeout(() => nextTrack(), 1000);
+        }
+      });
     } else {
-      startSynthFallback(track.freq);
+      showToast(`Stream unavailable for "${track.title}". Skipping to next track...`);
+      setTimeout(() => nextTrack(), 1000);
     }
   }
 
@@ -670,6 +1054,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     playlist.splice(index, 1);
+    saveQueueState();
     showToast(`Removed "${removedTrack.title}"`);
 
     if (playlist.length === 0) {
@@ -727,7 +1112,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Time Sync Loop for YouTube IFrame or Fallback Synth
+  // Time Sync Loop for YouTube IFrame
   setInterval(() => {
     if (isDraggingScrubber) return;
     const track = playlist[currentIndex];
@@ -740,15 +1125,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (total > 0) track.duration = total;
         updateProgressUI(current, total);
       } catch (e) { }
-
-    } else if (!track.isLocal && !track.isYt && !track.audioUrl) {
-      // Synthetic fallback synth ONLY (never run for audio files or online stream URLs)
-      track.currentTime = (track.currentTime || 0) + 0.5;
-      if (track.currentTime >= (track.duration || 180)) {
-        if (isRepeat) track.currentTime = 0;
-        else { nextTrack(); return; }
-      }
-      updateProgressUI(track.currentTime, track.duration || 180);
     }
   }, 500);
 
@@ -852,7 +1228,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 audioUrl: audioUrl,
                 duration: parseInt(song.duration) || 210,
                 isOnline: true,
-                badge: 'JioSaavn'
+                badge: 'Spotify'
               };
             }).filter(Boolean);
           }
@@ -893,11 +1269,11 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   }
 
-  // --- YTMusicAPI (Python Server) Search Provider ---
-  async function searchYtmusicApiServer(term) {
+  // --- spotapi (Unofficial Spotify API Python Server) Search Provider ---
+  async function searchSpotifyApiServer(term) {
     try {
-      const res = await fetch(`${API_BASE}/api/search?q=${encodeURIComponent(term)}`, {
-        signal: AbortSignal.timeout(4000)
+      const res = await fetch(`${API_BASE}/api/spotify/search?q=${encodeURIComponent(term)}`, {
+        signal: AbortSignal.timeout(5000)
       });
       if (res.ok) {
         const data = await res.json();
@@ -917,17 +1293,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const term = query.trim();
-    showToast(`Searching YT Music for "${term}"...`);
+    showToast(`Searching Spotify for "${term}"... 🎧`);
 
-    // 1. Unofficial YTMusicAPI Python Server (http://localhost:5000) - PRIMARY
-    let results = await searchYtmusicApiServer(term);
+    // 1. spotapi Unofficial Spotify API (Primary)
+    let results = await searchSpotifyApiServer(term);
     if (results && results.length > 0) {
       ytSearchResults = results;
       renderPlaylist();
       return;
     }
 
-    // 2. JioSaavn (Fallback)
+    // 2. JioSaavn Stream Fallback
     results = await searchJioSaavn(term);
     if (results && results.length > 0) {
       ytSearchResults = results;
@@ -935,7 +1311,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // 3. Audius API (Fallback)
+    // 3. Audius API Fallback
     results = await searchAudius(term);
     if (results && results.length > 0) {
       ytSearchResults = results;
@@ -951,28 +1327,64 @@ document.addEventListener('DOMContentLoaded', () => {
   // Alias for backward compatibility
   const searchYtMusic = searchOnlineSongs;
 
-  // Resolve a YouTube video ID for an iTunes track
-  async function resolveYtId(track) {
-    const searchTerm = `${track.title} ${track.artist}`;
+  async function searchPiped(term) {
+    const pipedInstances = [
+      'https://pipedapi.kavin.rocks',
+      'https://api.piped.privacydev.net',
+      'https://pipedapi.drgns.space'
+    ];
+    for (const base of pipedInstances) {
+      try {
+        const res = await fetch(`${base}/search?q=${encodeURIComponent(term)}&filter=music_songs`, { signal: AbortSignal.timeout(4000) });
+        if (res.ok) {
+          const data = await res.json();
+          const items = data.items || data;
+          if (Array.isArray(items) && items.length > 0) {
+            return items.filter(item => item.type === 'stream').map(item => {
+              const ytId = item.url ? item.url.replace('/watch?v=', '') : item.id;
+              return {
+                id: 'piped-' + ytId,
+                title: item.title || 'Untitled',
+                artist: item.uploaderName || 'Online Artist',
+                album: 'Spotify Stream',
+                art: item.thumbnail || '',
+                ytId: ytId,
+                isYt: true,
+                duration: item.duration || 180,
+                badge: 'Spotify'
+              };
+            });
+          }
+        }
+      } catch (e) {}
+    }
+    return null;
+  }
 
-    // Try Piped first
+  // Resolve direct playable stream for Spotify / iTunes tracks
+  async function resolveSpotifyTrackStream(track) {
+    const searchTerm = `${track.title} ${track.artist}`;
+    const jioResults = await searchJioSaavn(searchTerm);
+    if (jioResults && jioResults.length > 0 && jioResults[0].audioUrl) {
+      track.audioUrl = jioResults[0].audioUrl;
+      track.needsResolve = false;
+      track.badge = 'Spotify';
+      track.isSpotify = true;
+      return true;
+    }
     const pipedResults = await searchPiped(searchTerm);
     if (pipedResults && pipedResults.length > 0) {
       track.ytId = pipedResults[0].ytId;
+      track.isYt = true;
       track.needsResolve = false;
+      track.badge = 'Spotify';
+      track.isSpotify = true;
       return true;
     }
-
-    // Try Invidious
-    const invResults = await searchInvidious(searchTerm);
-    if (invResults && invResults.length > 0) {
-      track.ytId = invResults[0].ytId;
-      track.needsResolve = false;
-      return true;
-    }
-
     return false;
   }
+
+  const resolveYtId = resolveSpotifyTrackStream;
 
   // --- Local Audio Ingestion ---
   async function processAudioFiles(files) {
@@ -1134,15 +1546,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   tabYtMusic.addEventListener('click', () => {
     searchMode = 'yt';
+    selectedSuggestedPlaylist = null;
     tabYtMusic.classList.add('active');
     tabQueue.classList.remove('active');
     if (tabFavorites) tabFavorites.classList.remove('active');
     if (tabCommunity) tabCommunity.classList.remove('active');
-    searchInput.placeholder = 'Search online songs (JioSaavn / Audius)...';
+    searchInput.placeholder = 'Search Spotify songs (spotapi)...';
+    fetchRealSpotifyPlaylists();
     if (searchInput.value.trim().length > 0) {
       searchOnlineSongs(searchInput.value);
     } else {
-      searchOnlineSongs('Starboy');
+      renderPlaylist();
     }
   });
 
@@ -1317,11 +1731,144 @@ document.addEventListener('DOMContentLoaded', () => {
     playlistItems.innerHTML = '';
 
     if (searchMode === 'yt') {
+      // 1. If exploring a selected suggested playlist detail view
+      if (selectedSuggestedPlaylist && (!searchInput || searchInput.value.trim().length === 0)) {
+        const headerEl = document.createElement('div');
+        headerEl.className = 'suggested-detail-header';
+        headerEl.innerHTML = `
+          <div class="suggested-detail-info">
+            <img src="${selectedSuggestedPlaylist.art}" alt="${selectedSuggestedPlaylist.title}" class="suggested-detail-art">
+            <div>
+              <div class="suggested-detail-title">${selectedSuggestedPlaylist.title}</div>
+              <div class="suggested-detail-sub">${selectedSuggestedPlaylist.sub}</div>
+            </div>
+          </div>
+          <div class="suggested-detail-actions">
+            <button class="btn-playlist-play btn-play-all-sugg" style="padding: 6px 12px; font-size:12px;">▶ Play All</button>
+            <button class="btn-back-playlists">← Back</button>
+          </div>
+        `;
+
+        headerEl.querySelector('.btn-back-playlists').addEventListener('click', () => {
+          selectedSuggestedPlaylist = null;
+          renderPlaylist();
+        });
+
+        headerEl.querySelector('.btn-play-all-sugg').addEventListener('click', () => {
+          if (selectedSuggestedPlaylist.tracks && selectedSuggestedPlaylist.tracks.length > 0) {
+            const startIdx = playlist.length;
+            selectedSuggestedPlaylist.tracks.forEach(t => playlist.push(t));
+            saveQueueState();
+            showToast(`Playing playlist "${selectedSuggestedPlaylist.title}"! 🎵`);
+            loadTrack(startIdx, true);
+            playlistModal.classList.add('hidden');
+          }
+        });
+
+        playlistItems.appendChild(headerEl);
+
+        selectedSuggestedPlaylist.tracks.forEach((track) => {
+          const item = document.createElement('div');
+          item.className = 'playlist-item';
+          const badgeLabel = track.badge || 'Suggested';
+
+          item.innerHTML = `
+            <img src="${track.art}" alt="${track.title}">
+            <div class="playlist-item-info">
+              <div class="playlist-item-title">${track.title}</div>
+              <div class="playlist-item-artist">${track.artist} <span class="playlist-item-badge badge-yt">${badgeLabel}</span></div>
+            </div>
+            <div class="playlist-item-duration">${formatTime(track.duration)}</div>
+            <button class="playlist-item-add" title="Add track to queue" style="background:none;border:none;color:var(--primary-purple-dark);font-size:18px;font-weight:800;padding:4px 8px;cursor:pointer;">+</button>
+          `;
+
+          item.addEventListener('click', () => {
+            playlist.push(track);
+            saveQueueState();
+            const newIdx = playlist.length - 1;
+            showToast(`Playing "${track.title}"!`);
+            loadTrack(newIdx, true);
+            playlistModal.classList.add('hidden');
+          });
+
+          playlistItems.appendChild(item);
+        });
+        return;
+      }
+
+      // 2. If search input is empty, render Suggested Playlists grid!
+      if (!customList && (!searchInput || searchInput.value.trim().length === 0)) {
+        const container = document.createElement('div');
+        container.className = 'suggested-playlists-container';
+
+        container.innerHTML = `
+          <div class="suggested-header">
+            <h4>✨ Suggested Playlists</h4>
+            <span>Curated Online Music</span>
+          </div>
+          <div class="suggested-playlists-grid" id="suggestedGrid"></div>
+        `;
+
+        const grid = container.querySelector('#suggestedGrid');
+
+        SUGGESTED_PLAYLISTS.forEach(pl => {
+          const card = document.createElement('div');
+          card.className = 'playlist-card';
+          card.innerHTML = `
+            <div class="playlist-card-art-wrapper">
+              <img src="${pl.art}" alt="${pl.title}" class="playlist-card-art">
+              <span class="playlist-card-badge">${pl.badge}</span>
+              <div class="playlist-card-play-overlay">
+                <div class="playlist-card-play-btn">▶</div>
+              </div>
+            </div>
+            <div class="playlist-card-title">${pl.title}</div>
+            <div class="playlist-card-sub">${pl.sub}</div>
+            <div class="playlist-card-actions">
+              <button class="btn-playlist-play">▶ Play All</button>
+              <button class="btn-playlist-explore">Explore</button>
+            </div>
+          `;
+
+          const exploreBtn = card.querySelector('.btn-playlist-explore');
+          exploreBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectedSuggestedPlaylist = pl;
+            renderPlaylist();
+          });
+
+          card.addEventListener('click', (e) => {
+            if (e.target.classList.contains('btn-playlist-play')) return;
+            selectedSuggestedPlaylist = pl;
+            renderPlaylist();
+          });
+
+          const playAllBtn = card.querySelector('.btn-playlist-play');
+          playAllBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (pl.tracks && pl.tracks.length > 0) {
+              const startIdx = playlist.length;
+              pl.tracks.forEach(t => playlist.push(t));
+              saveQueueState();
+              showToast(`Playing playlist "${pl.title}"! 🎵`);
+              loadTrack(startIdx, true);
+              playlistModal.classList.add('hidden');
+            }
+          });
+
+          grid.appendChild(card);
+        });
+
+        playlistItems.appendChild(container);
+        return;
+      }
+
+      // 3. Otherwise render online search results
       const displayList = customList || ytSearchResults;
       if (displayList.length === 0) {
         playlistItems.innerHTML = `
           <div style="text-align: center; padding: 24px; color: var(--text-sub); font-size: 14px; font-weight: 600;">
-            Type a song name in the search bar to find full-length online music.
+            No online results found for "${searchInput ? searchInput.value : ''}".
           </div>
         `;
         return;
@@ -1331,29 +1878,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const item = document.createElement('div');
         item.className = 'playlist-item';
 
-        const badgeLabel = track.badge || (track.isYt ? 'YT Music' : 'Online');
+        const badgeLabel = track.badge || 'Spotify';
 
         item.innerHTML = `
           <img src="${track.art}" alt="${track.title}">
           <div class="playlist-item-info">
             <div class="playlist-item-title">${track.title}</div>
-            <div class="playlist-item-artist">${track.artist} <span class="playlist-item-badge badge-yt">${badgeLabel}</span></div>
+            <div class="playlist-item-artist">${track.artist} <span class="playlist-item-badge badge-spotify">${badgeLabel}</span></div>
           </div>
           <div class="playlist-item-duration">${formatTime(track.duration)}</div>
           <button class="playlist-item-add" title="Add track to queue" style="background:none;border:none;color:var(--primary-purple-dark);font-size:18px;font-weight:800;padding:4px 8px;cursor:pointer;">+</button>
         `;
 
         item.addEventListener('click', async () => {
-          // If this track needs a YouTube video ID resolved (iTunes fallback result)
-          if (track.needsResolve && !track.ytId) {
+          if (track.needsResolve && !track.ytId && !track.audioUrl) {
             showToast(`Resolving "${track.title}"...`);
             const resolved = await resolveYtId(track);
             if (!resolved) {
-              showToast('Could not find this track on YouTube. Try another.');
+              showToast('Could not resolve stream for this track. Try another.');
               return;
             }
           }
           playlist.push(track);
+          saveQueueState();
           const newIdx = playlist.length - 1;
           showToast(`Playing "${track.title}"!`);
           loadTrack(newIdx, true);
@@ -1473,8 +2020,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const item = document.createElement('div');
         item.className = `playlist-item ${realIndex === currentIndex ? 'active' : ''}`;
 
-        let badgeClass = 'badge-yt';
-        let badgeText = track.badge || (track.isLocal ? 'Local' : 'Online');
+        let badgeClass = 'badge-spotify';
+        let badgeText = track.badge || (track.isLocal ? 'Local' : 'Spotify');
         if (track.isLocal) { badgeClass = 'badge-local'; }
 
         item.innerHTML = `
@@ -1813,6 +2360,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Initial Load
-  loadTrack(0);
+  // Fetch real Spotify public playlists from backend API
+  async function fetchRealSpotifyPlaylists() {
+    try {
+      const res = await fetch(`${API_BASE}/api/spotify/playlists`);
+      if (res.ok) {
+        const realPlaylists = await res.json();
+        if (Array.isArray(realPlaylists) && realPlaylists.length > 0) {
+          SUGGESTED_PLAYLISTS.length = 0;
+          realPlaylists.forEach(pl => SUGGESTED_PLAYLISTS.push(pl));
+          if (searchMode === 'yt' && !selectedSuggestedPlaylist && searchInput && !searchInput.value.trim()) {
+            renderPlaylist();
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Could not fetch real Spotify playlists:', e);
+    }
+  }
+
+  // Initial Load: Restore saved queue state without seeding hardcoded queue, and fetch real Spotify playlists
+  const loadedSavedQueue = loadQueueState();
+  if (!loadedSavedQueue) {
+    loadTrack(0, false);
+  }
+  fetchRealSpotifyPlaylists();
 });
