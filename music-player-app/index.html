@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moint - Figma Neumorphic Music Player</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Hidden Native Audio Element -->
+  <audio id="audioPlayer" preload="auto" crossorigin="anonymous"></audio>
+
+  <!-- Hidden YouTube Audio Engine -->
+  <div id="ytPlayerContainer" style="position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; overflow: hidden; top: -9999px; left: -9999px;">
+    <div id="ytPlayer"></div>
+  </div>
+
+  <!-- Hidden File Input for Local Audio Selection -->
+  <input type="file" id="localFileInput" accept="audio/*" multiple style="display: none;">
+
+  <!-- Top Left App Brand Name -->
+  <header class="app-brand">
+    <div class="brand-logo">
+      <span class="brand-dot"></span>
+      <span class="brand-name">Moint</span>
+    </div>
+  </header>
+
+  <!-- Top Right User Profile Button -->
+  <div class="user-profile-header" id="userProfileHeader">
+    <button class="profile-chip-btn" id="btnProfile">
+      <img id="headerUserAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=guest" alt="User Avatar" class="profile-header-avatar">
+      <span id="headerUserName" class="profile-header-name">Sign In</span>
+    </button>
+  </div>
+
+  <!-- Top Middle Search Bar with Acrylic Blur -->
+  <div class="search-bar-container">
+    <div class="search-bar-wrapper">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" id="searchInput" placeholder="Search songs, artists..." class="search-input" aria-label="Search music">
+      <button class="search-clear-btn hidden" id="btnClearSearch" title="Clear search">&times;</button>
+    </div>
+  </div>
+
+  <!-- Ambient Glow Background -->
+  <div class="ambient-bg">
+    <div class="glow-orb glow-1"></div>
+    <div class="glow-orb glow-2"></div>
+  </div>
+
+  <main class="app-viewport">
+    <!-- Music Player Main Card -->
+    <div class="player-card" id="playerCard">
+      
+      <!-- Drag & Drop Zone Overlay -->
+      <div class="drop-zone hidden" id="dropZone">
+        <div class="drop-zone-content">
+          <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <p>Drop audio files here to add to playlist</p>
+        </div>
+      </div>
+
+      <!-- Upper Section: Artwork + Track Details + Top Actions -->
+      <div class="player-header">
+        
+        <!-- Album Cover -->
+        <div class="artwork-wrapper">
+          <img id="albumArt" src="assets/purple_haze.png" alt="Purple Haze Album Art" class="album-artwork">
+          <div class="artwork-overlay" id="artworkOverlay">
+            <span class="playing-indicator" id="playingBadge">
+              <span class="bar bar-1"></span>
+              <span class="bar bar-2"></span>
+              <span class="bar bar-3"></span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Track Info -->
+        <div class="track-details">
+          <span class="now-playing-tag" id="nowPlayingTag">NOW PLAYING</span>
+          <h1 class="track-title" id="trackTitle">Purple Haze</h1>
+          <h2 class="track-artist" id="trackArtist">Jimi Hendrix</h2>
+          <p class="track-album" id="trackAlbum">Woodstock</p>
+        </div>
+
+        <!-- Side Quick Actions (Top Right) -->
+        <div class="side-actions">
+          <button class="action-btn action-add" id="btnAddFiles" title="Add local audio files" aria-label="Add Music">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+
+          <button class="action-btn" id="btnLike" title="Favorite track" aria-label="Favorite">
+            <svg class="icon icon-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.78-8.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+          </button>
+          
+          <button class="action-btn" id="btnPlaylistToggle" title="Open Playlist" aria-label="Playlist">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+          </button>
+
+          <button class="action-btn" id="btnShare" title="Share track" aria-label="Share">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Scrubber / Progress Bar Section -->
+      <div class="progress-section">
+        <div class="progress-bar-container" id="progressContainer">
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="progressFill" style="width: 0%;"></div>
+            <div class="progress-thumb" id="progressThumb" style="left: 0%;"></div>
+          </div>
+        </div>
+        <div class="time-stamps">
+          <span class="time-text" id="currentTime">0:00</span>
+          <span class="time-text" id="totalTime">0:00</span>
+        </div>
+      </div>
+
+      <!-- Main Controls Row -->
+      <div class="controls-row">
+        <!-- Shuffle -->
+        <button class="ctrl-btn ctrl-small" id="btnShuffle" title="Toggle Shuffle" aria-label="Shuffle">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 3 21 3 21 8"></polyline>
+            <line x1="4" y1="20" x2="21" y2="3"></line>
+            <polyline points="21 16 21 21 16 21"></polyline>
+            <line x1="15" y1="15" x2="21" y2="21"></line>
+            <line x1="4" y1="4" x2="9" y2="9"></line>
+          </svg>
+        </button>
+
+        <!-- Repeat -->
+        <button class="ctrl-btn ctrl-small" id="btnRepeat" title="Toggle Repeat" aria-label="Repeat">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="17 1 21 5 17 9"></polyline>
+            <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+            <polyline points="7 23 3 19 7 15"></polyline>
+            <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+          </svg>
+        </button>
+
+        <!-- Previous -->
+        <button class="ctrl-btn ctrl-medium" id="btnPrev" title="Previous Track" aria-label="Previous">
+          <svg class="icon-solid" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="19 20 9 12 19 4 19 20"></polygon>
+            <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="3" stroke-linecap="round"></line>
+          </svg>
+        </button>
+
+        <!-- Play / Pause Main Button -->
+        <button class="ctrl-btn ctrl-play" id="btnPlay" title="Play / Pause" aria-label="Play">
+          <svg class="icon-play" id="iconPlay" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="6 4 19 12 6 20 6 4"></polygon>
+          </svg>
+          <svg class="icon-pause hidden" id="iconPause" viewBox="0 0 24 24" fill="currentColor">
+            <rect x="6" y="4" width="4" height="16" rx="1.5"></rect>
+            <rect x="14" y="4" width="4" height="16" rx="1.5"></rect>
+          </svg>
+        </button>
+
+        <!-- Next -->
+        <button class="ctrl-btn ctrl-medium" id="btnNext" title="Next Track" aria-label="Next">
+          <svg class="icon-solid" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 4 15 12 5 20 5 4"></polygon>
+            <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="3" stroke-linecap="round"></line>
+          </svg>
+        </button>
+
+        <!-- Equalizer -->
+        <button class="ctrl-btn ctrl-small" id="btnEq" title="Equalizer Settings" aria-label="Equalizer">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
+          </svg>
+        </button>
+
+        <!-- Volume Container -->
+        <div class="volume-wrapper">
+          <button class="ctrl-btn ctrl-small" id="btnVolume" title="Volume" aria-label="Volume">
+            <svg class="icon" id="iconVolume" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+          </button>
+          
+          <!-- Popover Volume Slider -->
+          <div class="volume-popover hidden" id="volumePopover">
+            <input type="range" id="volumeSlider" min="0" max="100" value="80" class="volume-slider" aria-label="Volume Level">
+            <span class="volume-percent" id="volumePercent">80%</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Card Handle Pill -->
+      <div class="card-handle-pill" id="cardHandle"></div>
+
+    </div>
+  </main>
+
+  <!-- Playlist Modal / Drawer -->
+  <div class="modal-overlay hidden" id="playlistModal">
+    <div class="modal-card playlist-modal-card">
+      <div class="modal-top-bar">
+        <div class="modal-title-box">
+          <h3>Music Library</h3>
+        </div>
+        <div class="modal-actions-right">
+          <button class="btn-import-modal" id="btnOpenUploadModal">+ Upload Song</button>
+          <button class="btn-import-modal" id="btnModalAddFiles">+ Local</button>
+          <button class="close-btn" id="btnClosePlaylist">&times;</button>
+        </div>
+      </div>
+      
+      <div class="modal-tabs-bar">
+        <button class="tab-chip active" id="tabQueue">Queue</button>
+        <button class="tab-chip" id="tabYtMusic">Online Songs 🎵</button>
+        <button class="tab-chip" id="tabFavorites">Favorites ❤️</button>
+        <button class="tab-chip" id="tabCommunity">Community 🌐</button>
+      </div>
+
+      <div class="playlist-list" id="playlistItems">
+        <!-- Playlist items injected via app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Equalizer Modal -->
+  <div class="modal-overlay hidden" id="eqModal">
+    <div class="modal-card eq-card">
+      <div class="modal-header">
+        <h3>Live Audio Spectrum & EQ</h3>
+        <button class="close-btn" id="btnCloseEq">&times;</button>
+      </div>
+      <div class="eq-body">
+        <canvas id="eqCanvas" width="360" height="120"></canvas>
+        
+        <div class="eq-presets">
+          <button class="preset-chip active" data-preset="flat">Flat</button>
+          <button class="preset-chip" data-preset="rock">Rock</button>
+          <button class="preset-chip" data-preset="psychedelic">Psychedelic</button>
+          <button class="preset-chip" data-preset="bass">Bass Boost</button>
+          <button class="preset-chip" data-preset="acoustic">Acoustic</button>
+        </div>
+
+        <!-- 3-Band Equalizer Frequency Sliders -->
+        <div class="eq-sliders-container">
+          <div class="eq-band">
+            <span class="eq-label">Bass (100Hz)</span>
+            <input type="range" id="eqBass" min="-12" max="12" value="0" step="1" class="eq-slider">
+            <span class="eq-val" id="eqBassVal">0dB</span>
+          </div>
+
+          <div class="eq-band">
+            <span class="eq-label">Mid (1kHz)</span>
+            <input type="range" id="eqMid" min="-12" max="12" value="0" step="1" class="eq-slider">
+            <span class="eq-val" id="eqMidVal">0dB</span>
+          </div>
+
+          <div class="eq-band">
+            <span class="eq-label">Treble (4kHz)</span>
+            <input type="range" id="eqTreble" min="-12" max="12" value="0" step="1" class="eq-slider">
+            <span class="eq-val" id="eqTrebleVal">0dB</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Auth / Sign-In Modal -->
+  <div class="modal-overlay hidden" id="authModal">
+    <div class="modal-card auth-card">
+      <div class="modal-header">
+        <h3>Sign In to Moint</h3>
+        <button class="close-btn" id="btnCloseAuth">&times;</button>
+      </div>
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" id="authTabPhone">Phone Number</button>
+        <button class="auth-tab-btn" id="authTabGoogle">Google ID</button>
+      </div>
+      
+      <!-- Phone Login Form -->
+      <form class="auth-form" id="phoneLoginForm">
+        <div class="form-group">
+          <label for="inputPhone">Phone Number</label>
+          <div class="input-with-prefix">
+            <span class="phone-prefix">+91</span>
+            <input type="tel" id="inputPhone" placeholder="98765 43210" required class="form-input">
+          </div>
+        </div>
+        <div class="form-group hidden" id="otpGroup">
+          <label for="inputOtp">4-Digit Verification Code</label>
+          <input type="text" id="inputOtp" placeholder="1234" maxlength="4" class="form-input">
+        </div>
+        <button type="submit" class="btn-primary-action" id="btnPhoneSubmit">Send OTP Code</button>
+      </form>
+
+      <!-- Google Login Form -->
+      <div class="auth-form hidden" id="googleLoginForm">
+        <div class="google-sign-box">
+          <div class="google-logo-wrapper">
+            <svg viewBox="0 0 24 24" width="28" height="28"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+          </div>
+          <p class="auth-sub-desc">Sign in with your Google Account</p>
+          <div class="form-group">
+            <label for="inputGoogleEmail">Google Email</label>
+            <input type="email" id="inputGoogleEmail" placeholder="your.name@gmail.com" class="form-input">
+          </div>
+          <div class="form-group">
+            <label for="inputGoogleName">Full Name</label>
+            <input type="text" id="inputGoogleName" placeholder="Your Name" class="form-input">
+          </div>
+          <button class="btn-google-action" id="btnGoogleSubmit">Sign In with Google</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Profile Modal -->
+  <div class="modal-overlay hidden" id="profileModal">
+    <div class="modal-card profile-card">
+      <div class="modal-header">
+        <h3>User Profile</h3>
+        <button class="close-btn" id="btnCloseProfile">&times;</button>
+      </div>
+      <div class="profile-card-body">
+        <div class="profile-avatar-container">
+          <img id="profileModalAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=user" alt="User Avatar" class="profile-modal-avatar">
+        </div>
+        <form id="editProfileForm" class="auth-form">
+          <div class="form-group">
+            <label for="editProfileName">Display Name</label>
+            <input type="text" id="editProfileName" required class="form-input">
+          </div>
+          <div class="form-group">
+            <label for="editProfileBio">Bio</label>
+            <input type="text" id="editProfileBio" class="form-input">
+          </div>
+          <div class="form-group">
+            <label for="editProfileAvatar">Avatar Seed / Image URL</label>
+            <input type="text" id="editProfileAvatar" class="form-input">
+          </div>
+          <div class="profile-actions">
+            <button type="submit" class="btn-primary-action">Save Changes</button>
+            <button type="button" class="btn-logout-action" id="btnLogout">Sign Out</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Custom Song Modal -->
+  <div class="modal-overlay hidden" id="uploadSongModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Upload Custom Song ☁️</h3>
+        <button class="close-btn" id="btnCloseUpload">&times;</button>
+      </div>
+      <form id="uploadSongForm" class="auth-form">
+        <div class="form-group">
+          <label for="uploadTitle">Song Title *</label>
+          <input type="text" id="uploadTitle" placeholder="e.g. Neon Horizon" required class="form-input">
+        </div>
+        <div class="form-group">
+          <label for="uploadArtist">Artist Name *</label>
+          <input type="text" id="uploadArtist" placeholder="e.g. Alex River" required class="form-input">
+        </div>
+        <div class="form-group">
+          <label for="uploadAudioFile">Audio File (MP3 / AAC / WAV) *</label>
+          <input type="file" id="uploadAudioFile" accept="audio/*" required class="form-input">
+        </div>
+        <div class="form-group">
+          <label for="uploadArtFile">Cover Artwork Image (Optional)</label>
+          <input type="file" id="uploadArtFile" accept="image/*" class="form-input">
+        </div>
+        <button type="submit" class="btn-primary-action" id="btnSubmitUpload">Upload & Share with Community</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- YouTube IFrame API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <!-- App Script -->
+  <script src="app.js"></script>
+</body>
+</html>

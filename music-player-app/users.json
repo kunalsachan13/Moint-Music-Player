@@ -1,0 +1,29 @@
+{
+  "user_phone_9876543210": {
+    "id": "user_phone_9876543210",
+    "name": "Test User",
+    "phone": "9876543210",
+    "email": "",
+    "bio": "Music Lover on Moint 🎵",
+    "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=user_phone_9876543210",
+    "joinedAt": 1786282763
+  },
+  "user_phone_6307993810": {
+    "id": "user_phone_6307993810",
+    "name": "Kunal",
+    "phone": "6307993810",
+    "email": "",
+    "bio": "Music Lover on Moint 🎵",
+    "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=user_phone_6307993810",
+    "joinedAt": 1786282860
+  },
+  "user_google_user_at_gmail_com": {
+    "id": "user_google_user_at_gmail_com",
+    "name": "user",
+    "email": "user@gmail.com",
+    "phone": "",
+    "bio": "Listening on Moint Music 🎧",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+    "joinedAt": 1786284638
+  }
+}
